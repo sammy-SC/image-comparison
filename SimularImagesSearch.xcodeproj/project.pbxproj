@@ -13,11 +13,16 @@
 		A53864351C17336C00BB6F24 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A53864341C17336C00BB6F24 /* Assets.xcassets */; };
 		A53864381C17336C00BB6F24 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A53864361C17336C00BB6F24 /* LaunchScreen.storyboard */; };
 		A53864401C17338800BB6F24 /* UIImageExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A538643F1C17338800BB6F24 /* UIImageExtensions.swift */; };
+		A5743C911C1C2CC800CFD040 /* Operation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5743C901C1C2CC800CFD040 /* Operation.swift */; };
+		A5743C931C1C2CD900CFD040 /* EuclideanOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5743C921C1C2CD900CFD040 /* EuclideanOperation.swift */; };
 		A5AC36B31C174B9C0037645C /* ImageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5AC36B21C174B9C0037645C /* ImageCell.swift */; };
 		A5AC36B51C174C0D0037645C /* UIKitExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5AC36B41C174C0D0037645C /* UIKitExtensions.swift */; };
 		A5AC36B71C174C780037645C /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5AC36B61C174C780037645C /* Constants.swift */; };
 		A5AC36BE1C1750380037645C /* BaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5AC36BD1C1750380037645C /* BaseView.swift */; };
 		A5AC36C01C1765DE0037645C /* ImageSearchHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5AC36BF1C1765DE0037645C /* ImageSearchHeaderView.swift */; };
+		A5B72A3C1C196CBB008E0528 /* HistogramVector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5B72A3B1C196CBB008E0528 /* HistogramVector.swift */; };
+		A5B72A3E1C196DC5008E0528 /* FoundationExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5B72A3D1C196DC5008E0528 /* FoundationExtensions.swift */; };
+		A5C7A3221C1A14A300931EF6 /* BCOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C7A3211C1A14A300931EF6 /* BCOperation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,11 +36,16 @@
 		A53864371C17336C00BB6F24 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A53864391C17336C00BB6F24 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A538643F1C17338800BB6F24 /* UIImageExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIImageExtensions.swift; sourceTree = "<group>"; };
+		A5743C901C1C2CC800CFD040 /* Operation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Operation.swift; sourceTree = "<group>"; };
+		A5743C921C1C2CD900CFD040 /* EuclideanOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EuclideanOperation.swift; sourceTree = "<group>"; };
 		A5AC36B21C174B9C0037645C /* ImageCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCell.swift; sourceTree = "<group>"; };
 		A5AC36B41C174C0D0037645C /* UIKitExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIKitExtensions.swift; sourceTree = "<group>"; };
 		A5AC36B61C174C780037645C /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		A5AC36BD1C1750380037645C /* BaseView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseView.swift; sourceTree = "<group>"; };
 		A5AC36BF1C1765DE0037645C /* ImageSearchHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageSearchHeaderView.swift; sourceTree = "<group>"; };
+		A5B72A3B1C196CBB008E0528 /* HistogramVector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HistogramVector.swift; sourceTree = "<group>"; };
+		A5B72A3D1C196DC5008E0528 /* FoundationExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FoundationExtensions.swift; sourceTree = "<group>"; };
+		A5C7A3211C1A14A300931EF6 /* BCOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BCOperation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,10 +98,11 @@
 		A538642C1C17336C00BB6F24 /* SimularImagesSearch */ = {
 			isa = PBXGroup;
 			children = (
-				A5AC36C11C1776360037645C /* Models */,
+				A5C7A3201C1A148500931EF6 /* Operations */,
+				A5B72A3A1C196CAC008E0528 /* Models */,
+				A5AC36B81C174F780037645C /* ViewControllers */,
 				A5AC36BA1C174F8F0037645C /* Extensions */,
 				A5AC36B91C174F800037645C /* Resources */,
-				A5AC36B81C174F780037645C /* ViewControllers */,
 			);
 			path = SimularImagesSearch;
 			sourceTree = "<group>";
@@ -121,6 +132,7 @@
 			children = (
 				A538643F1C17338800BB6F24 /* UIImageExtensions.swift */,
 				A5AC36B41C174C0D0037645C /* UIKitExtensions.swift */,
+				A5B72A3D1C196DC5008E0528 /* FoundationExtensions.swift */,
 			);
 			name = Extensions;
 			sourceTree = "<group>";
@@ -144,11 +156,22 @@
 			name = Views;
 			sourceTree = "<group>";
 		};
-		A5AC36C11C1776360037645C /* Models */ = {
+		A5B72A3A1C196CAC008E0528 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				A5B72A3B1C196CBB008E0528 /* HistogramVector.swift */,
 			);
 			name = Models;
+			sourceTree = "<group>";
+		};
+		A5C7A3201C1A148500931EF6 /* Operations */ = {
+			isa = PBXGroup;
+			children = (
+				A5C7A3211C1A14A300931EF6 /* BCOperation.swift */,
+				A5743C901C1C2CC800CFD040 /* Operation.swift */,
+				A5743C921C1C2CD900CFD040 /* EuclideanOperation.swift */,
+			);
+			name = Operations;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -272,14 +295,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A5743C931C1C2CD900CFD040 /* EuclideanOperation.swift in Sources */,
 				A53864401C17338800BB6F24 /* UIImageExtensions.swift in Sources */,
+				A5B72A3C1C196CBB008E0528 /* HistogramVector.swift in Sources */,
 				A53864301C17336C00BB6F24 /* ViewController.swift in Sources */,
 				A5AC36BE1C1750380037645C /* BaseView.swift in Sources */,
 				A5AC36C01C1765DE0037645C /* ImageSearchHeaderView.swift in Sources */,
 				A538642E1C17336C00BB6F24 /* AppDelegate.swift in Sources */,
+				A5B72A3E1C196DC5008E0528 /* FoundationExtensions.swift in Sources */,
 				A5AC36B31C174B9C0037645C /* ImageCell.swift in Sources */,
 				A5AC36B51C174C0D0037645C /* UIKitExtensions.swift in Sources */,
+				A5C7A3221C1A14A300931EF6 /* BCOperation.swift in Sources */,
 				A5AC36B71C174C780037645C /* Constants.swift in Sources */,
+				A5743C911C1C2CC800CFD040 /* Operation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

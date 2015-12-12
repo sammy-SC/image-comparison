@@ -8,11 +8,14 @@
 
 import UIKit
 
+private let euclideanDistanceString = "Euclidean distance"
+private let bhattacharyyaCoefficientString = "Bhattacharyya Coefficient"
 
 final class ImageSearchHeaderView: UICollectionReusableView {
 	var imageTapAction: (() -> Void)?
-	weak var label: UILabel!
+	weak var switcher: UISwitch!
 	weak var imageView: UIImageView!
+	private weak var label: UILabel!
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
@@ -34,25 +37,42 @@ final class ImageSearchHeaderView: UICollectionReusableView {
 			imageView.centerXAnchor.constraintEqualToAnchor(centerXAnchor)
 			])
 
-
 		let label = UILabel()
-		label.numberOfLines = 0
+		label.text = euclideanDistanceString
 		label.textAlignment = .Center
-		label.text = "Tap on the space above to pick image"
+		label.numberOfLines = 0
 		label.translatesAutoresizingMaskIntoConstraints = false
 		addSubview(label)
 		self.label = label
 
-		let bottom = label.bottomAnchor.constraintEqualToAnchor(bottomAnchor, constant: -20)
-		let right =  label.rightAnchor.constraintEqualToAnchor(rightAnchor, constant: -20)
-		bottom.priority = 900
-		right.priority = 900
 		addConstraints([
-			label.leftAnchor.constraintEqualToAnchor(leftAnchor, constant: 20),
-			right,
 			label.topAnchor.constraintEqualToAnchor(imageView.bottomAnchor, constant: 20),
+			label.leadingAnchor.constraintEqualToAnchor(self.leadingAnchor),
+			label.trailingAnchor.constraintEqualToAnchor(self.trailingAnchor),
+			])
+
+		let switcher = UISwitch()
+		switcher.translatesAutoresizingMaskIntoConstraints = false
+		switcher.addTarget(self, action: "didSwitch:", forControlEvents: .ValueChanged)
+		addSubview(switcher)
+		self.switcher = switcher
+
+		let bottom = switcher.bottomAnchor.constraintEqualToAnchor(bottomAnchor, constant: -40)
+		bottom.priority = UILayoutPriorityFittingSizeLevel + 1
+		addConstraints([
+			switcher.centerXAnchor.constraintEqualToAnchor(centerXAnchor),
+			switcher.topAnchor.constraintEqualToAnchor(label.bottomAnchor, constant: 20),
 			bottom,
 			])
+	}
+
+	func didSwitch(sender: UISwitch) {
+		if sender.on {
+			label.text = bhattacharyyaCoefficientString
+		} else {
+			label.text = euclideanDistanceString
+		}
+
 	}
 
 	func didTapImage() {

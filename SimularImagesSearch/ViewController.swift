@@ -12,9 +12,20 @@ import JTSImageViewController
 import SVProgressHUD
 
 final class ViewController: UIViewController {
+	private let operationQueue: NSOperationQueue = {
+		let queue = NSOperationQueue()
+		queue.qualityOfService = .UserInitiated
+		queue.maxConcurrentOperationCount = 1
+		return queue
+	}()
 	private let manager = PHImageManager.defaultManager()
-	private let cachingImageManager = PHCachingImageManager()
 	private let pixelDensity = UIScreen.mainScreen().scale
+	private var assets = [PHAsset]()
+	private var images = [(asset: PHAsset, similarity: Double)]()
+	private weak var collectionView: UICollectionView!
+	private var headerView: ImageSearchHeaderView?
+	private var cancelButton: UIBarButtonItem!
+	private var baseView: SimularImageSearcherView!
 
 	private let cellRequestOptions: PHImageRequestOptions = {
 		let request = PHImageRequestOptions()
@@ -24,50 +35,45 @@ final class ViewController: UIViewController {
 		return request
 	}()
 
-	private let viewerRequestOptions: PHImageRequestOptions = {
-		let request = PHImageRequestOptions()
-		request.synchronous = true
-		request.deliveryMode = .HighQualityFormat
-		request.networkAccessAllowed = true
-
-		request.progressHandler = { progress, error, _, _ in
-			if let error = error {
-				SVProgressHUD.showErrorWithStatus("Failed to load the image")
-			} else {
-				SVProgressHUD.showProgress(Float(progress), maskType: SVProgressHUDMaskType.Gradient)
-			}
-		}
-
-		return request
-	}()
-
     private lazy var imagePicker: UIImagePickerController = {
         let imagePicker = UIImagePickerController()
         imagePicker.delegate = self
         return imagePicker
     }()
 
-	private var assets = [PHAsset]()
-	private var images = [(asset: PHAsset, similarity: Double)]()
-	private weak var collectionView: UICollectionView!
-	private var headerView: ImageSearchHeaderView?
+	private func loadImagesFromLibrary() {
+		let options = PHFetchOptions()
+		//		options.fetchLimit = 1
+		options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+		let results = PHAsset.fetchAssetsWithMediaType(.Image, options: options)
 
-	override func viewDidLoad() {
-		super.viewDidLoad()
-
-		let results = PHAsset.fetchAssetsWithMediaType(.Image, options: nil)
-
+		assets.removeAll()
 		results.enumerateObjectsUsingBlock { object, _, _ in
 			if let asset = object as? PHAsset {
 				self.assets.append(asset)
 			}
 		}
+	}
 
-		cachingImageManager.startCachingImagesForAssets(assets,
-			targetSize: PHImageManagerMaximumSize,
-			contentMode: .AspectFit,
-			options: nil
-		)
+	override func viewDidLoad() {
+		super.viewDidLoad()
+
+
+		PHPhotoLibrary.requestAuthorization { status in
+			dispatch_async(dispatch_get_main_queue()) {
+				switch status {
+				case .Authorized:
+					self.loadImagesFromLibrary()
+				default:
+					SVProgressHUD.showErrorWithStatus("No access")
+				}
+			}
+
+		}
+
+		cancelButton = UIBarButtonItem(title: "Cancel", style: UIBarButtonItemStyle.Plain, target: self, action: "didTapCancel")
+		cancelButton.enabled = false
+		navigationItem.rightBarButtonItem = cancelButton
 	}
 
 	override func loadView() {
@@ -77,6 +83,7 @@ final class ViewController: UIViewController {
         baseView.collectionView.dataSource = self
 		collectionView = baseView.collectionView
 		view = baseView
+		self.baseView = baseView
 	}
 
 	private func presentImagePicker() {
@@ -98,67 +105,119 @@ final class ViewController: UIViewController {
 		controller.addAction(cameraAction)
 		presentViewController(controller, animated: true, completion: nil)
 	}
+
+	func didTapCancel() {
+		self.title = "Cancelled"
+		cancelButton.enabled = false
+		operationQueue.cancelAllOperations()
+	}
 }
 
 // MARK: - UIImagePickerControllerDelegate Methods
 
-extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDelegateFlowLayout {
 
-    func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
-		self.headerView?.imageView.image = image
-
-		self.headerView?.label.text = "0 / \(assets.count)"
-		self.images.removeAll()
-		self.collectionView.reloadData()
-
-		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
-			var counter = 0
-			var failedToResizeCounter = 0
-			var failedToLoadCounter = 0
-			for asset in self.assets {
-				self.manager.requestImageForAsset(asset,
-					targetSize: CGSizeMake(100,100),
-					contentMode: .AspectFit,
-					options: self.cellRequestOptions) { finalResult, _ in
-						dispatch_async(dispatch_get_main_queue()) {
-							self.headerView?.label.text = "\(++counter) / \(self.assets.count)"
-							if counter == self.assets.count {
-								SVProgressHUD.showInfoWithStatus("Done")
-							}
-						}
-
-						guard let otherImage = finalResult else {
-							print("failed to load: \(++failedToLoadCounter)")
-							return
-						}
-						if let result = image.compareToImage(otherImage, withPrecision: 100) {
-							var newIndex = self.images.isEmpty ? 0 : self.images.count - 1
-							for index in 0 ..< self.images.count {
-								if result < self.images[index].similarity {
-									newIndex = index
-									break
-								}
-							}
-
-							dispatch_async(dispatch_get_main_queue()) {
-								self.collectionView.performBatchUpdates({
-									self.images.insert((asset: asset, similarity: result), atIndex: newIndex)
-									self.collectionView.insertItemsAtIndexPaths([NSIndexPath(forItem: newIndex, inSection: 0)])
-									}, completion: nil)
-							}
-						} else {
-							print("failed to resize: \(++failedToResizeCounter)")
-						}
+	private func bcOperationForAsset(asset: PHAsset, compareTo histogram: [Double]) -> Operation {
+		let operation = BCOperation(asset: asset, histogram: histogram)
+		
+		operation.completionBlock = {
+			dispatch_async(dispatch_get_main_queue()) {
+				if operation.cancelled { return }
+				self.title = "To go: \(self.operationQueue.operationCount)"
+				if self.operationQueue.operationCount == 0 {
+					self.title = "Done"
+					self.cancelButton.enabled = false
+					self.headerView?.switcher.enabled = true
 				}
+
+				guard let result = operation.result else {
+					return
+				}
+
+				print(result)
+				var newIndex = self.images.isEmpty ? 0 : self.images.count
+				for index in 0 ..< self.images.count {
+					if result > self.images[index].similarity {
+						newIndex = index
+						break
+					}
+				}
+				
+				self.collectionView.performBatchUpdates({
+					self.images.insert((asset: operation.asset, similarity: result), atIndex: newIndex)
+					self.collectionView.insertItemsAtIndexPaths([NSIndexPath(forItem: newIndex, inSection: 0)])
+					}, completion: nil)
 			}
 		}
-//		let otherImage = images.first!
-//		imageView.image = otherImage
 
-//		image.compareToImage(otherImage)
+		return operation
+	}
 
-        dismissViewControllerAnimated(true, completion: nil)
-    }
+	private func euclideanOperationForAsset(asset: PHAsset, compareTo histogram: [HistogramVector]) -> Operation {
+		let operation = EuclideanOperation(asset: asset, histogram: histogram)
+		
+		operation.completionBlock = {
+			dispatch_async(dispatch_get_main_queue()) {
+				if operation.cancelled { return }
+				self.title = "To go: \(self.operationQueue.operationCount)"
+				if self.operationQueue.operationCount == 0 {
+					self.title = "Done"
+					self.cancelButton.enabled = false
+					self.headerView?.switcher.enabled = true
+				}
+
+				guard let result = operation.result else {
+					return
+				}
+
+				print(result)
+				var newIndex = self.images.isEmpty ? 0 : self.images.count
+				for index in 0 ..< self.images.count {
+					if result < self.images[index].similarity {
+						newIndex = index
+						break
+					}
+				}
+				
+				self.collectionView.performBatchUpdates({
+					self.images.insert((asset: operation.asset, similarity: result), atIndex: newIndex)
+					self.collectionView.insertItemsAtIndexPaths([NSIndexPath(forItem: newIndex, inSection: 0)])
+					}, completion: nil)
+			}
+		}
+
+		return operation
+	}
+
+	func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
+		headerView?.imageView.image = image
+
+		title = "0 / \(assets.count)"
+		cancelButton.enabled = true
+		headerView?.switcher.enabled = false
+
+		images.removeAll()
+		collectionView.reloadData()
+
+		let dispatchQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)
+
+		dispatch_async(dispatchQueue) {
+			let operations: [Operation]
+
+			if self.headerView!.switcher.on {
+				let originalHistogram = image.normalized1DArray
+				operations = self.assets.map { self.bcOperationForAsset($0, compareTo: originalHistogram) }
+			} else {
+				let originalHistogram = image.normalisedHistogramVectors
+				operations = self.assets.map { self.euclideanOperationForAsset($0, compareTo: originalHistogram) }
+			}
+
+			dispatch_async(dispatch_get_main_queue()) {
+				self.operationQueue.addOperations(operations, waitUntilFinished: false)
+			}
+		}
+		dismissViewControllerAnimated(true, completion: nil)
+	}
 }
 
 
@@ -192,21 +251,6 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource {
 		imageInfo.referenceView = collectionView
 		let imageViewer = JTSImageViewController(imageInfo: imageInfo, mode: .Image, backgroundStyle: .Blurred)
 		imageViewer.showFromViewController(self, transition: .FromOriginalPosition)
-
-
-//		manager.requestImageForAsset(assets[indexPath.item],
-//			targetSize: PHImageManagerMaximumSize,
-//			contentMode: .AspectFill,
-//			options: viewerRequestOptions) { finalResult, tmp in
-//				print(tmp)
-//				guard let image = finalResult else { return }
-//				let imageInfo = JTSImageInfo()
-//				imageInfo.image = image
-//				imageInfo.referenceRect = cell.frame
-//				imageInfo.referenceView = collectionView
-//				let imageViewer = JTSImageViewController(imageInfo: imageInfo, mode: .Image, backgroundStyle: .Blurred)
-//				imageViewer.showFromViewController(self, transition: .FromOriginalPosition)
-//		}
 	}
 
 	func collectionView(collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionReusableView {

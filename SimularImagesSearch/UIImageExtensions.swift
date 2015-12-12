@@ -10,105 +10,125 @@ import UIKit
 import ImageIO
 import Accelerate
 
-extension Int {
-	var double: Double {
-		return Double(self)
-	}
-}
-
-struct HistogramVector {
-	let red: Int
-	let blue: Int
-	let green: Int
-
-	func compare(histogram: HistogramVector) -> Double {
-		let first = pow((red - histogram.red).double, 2.0)
-		let second = pow((blue - histogram.blue).double, 2.0)
-		let third = pow((green - histogram.green).double, 2.0)
-		return sqrt(first + second + third)
-	}
-
-	static func compareArray(array1: [HistogramVector], toArray array2: [HistogramVector]) -> Double {
-		var result = 0.0
-
-		for index in 0 ..< array1.count {
-    		let vector1 = array1[index]
-    		let vector2 = array2[index]
-			result += vector1.compare(vector2)
-		}
-
-		return sqrt(result)
-	}
-}
-
-
-private func compareArrays(array1: [UInt], array2: [UInt]) -> Double {
-	var result = 0.0
-
-	for index in 0 ..< array1.count {
-		let val1 = Double(array1[index])
-		let val2 = Double(array2[index])
-
-		result += (val1 - val2) * (val1 - val2)
-	}
-
-	return sqrt(result)
-}
+private let maxValue = 255
+private let binCount = 16
 
 extension UIImage {
-	var colorHistogram: [HistogramVector] {
-		let imageRef = self.CGImage
-		
+	var colorHistogram: (r: [UInt], g: [UInt], b: [UInt]) {
+		let imageRef = CGImage
+
 		let inProvider = CGImageGetDataProvider(imageRef)
 		let inBitmapData = CGDataProviderCopyData(inProvider)
-		
+
 		var inBuffer = vImage_Buffer(data: UnsafeMutablePointer(CFDataGetBytePtr(inBitmapData)), height: UInt(CGImageGetHeight(imageRef)), width: UInt(CGImageGetWidth(imageRef)), rowBytes: CGImageGetBytesPerRow(imageRef))
-		
-		let alpha = [Int](count: 256, repeatedValue: 0)
-		let red = [Int](count: 256, repeatedValue: 0)
-		let green = [Int](count: 256, repeatedValue: 0)
-		let blue = [Int](count: 256, repeatedValue: 0)
-		
-		let alphaPtr = UnsafeMutablePointer<vImagePixelCount>(alpha)
-		let redPtr = UnsafeMutablePointer<vImagePixelCount>(red)
-		let greenPtr = UnsafeMutablePointer<vImagePixelCount>(green)
-		let bluePtr = UnsafeMutablePointer<vImagePixelCount>(blue)
-		
+
+		let first = [UInt](count: 256, repeatedValue: 0)
+		let second = [UInt](count: 256, repeatedValue: 0)
+		let third = [UInt](count: 256, repeatedValue: 0)
+		let fourth = [UInt](count: 256, repeatedValue: 0)
+
+		let alphaPtr = UnsafeMutablePointer<vImagePixelCount>(first)
+		let redPtr = UnsafeMutablePointer<vImagePixelCount>(second)
+		let greenPtr = UnsafeMutablePointer<vImagePixelCount>(fourth)
+		let bluePtr = UnsafeMutablePointer<vImagePixelCount>(fourth)
+
 		let rgba = [redPtr, greenPtr, bluePtr, alphaPtr]
-		
+
 		let histogram = UnsafeMutablePointer<UnsafeMutablePointer<vImagePixelCount>>(rgba)
+
+		_ = vImageHistogramCalculation_ARGB8888(&inBuffer, histogram, UInt32(kvImageNoFlags))
+
+		let bitMapInfo = CGImageGetBitmapInfo(CGImage)
 		
-		_ = vImageHistogramCalculation_ARGB8888(&inBuffer, histogram, UInt32(kvImageLeaveAlphaUnchanged))
+		if CGImageGetAlphaInfo(CGImage) == .NoneSkipFirst {
+			if bitMapInfo.rawValue & CGBitmapInfo.ByteOrder32Little.rawValue > 0 {
+				return (r: fourth, g: third, b: second)
+			} else if bitMapInfo.rawValue & (CGBitmapInfo.ByteOrder32Big.rawValue | CGBitmapInfo.AlphaInfoMask.rawValue) > 0  {
+				return (r: third, g: fourth, b: first)
+			} else {
+			fatalError("not defined image format")
+			}
+		} else if CGImageGetAlphaInfo(CGImage) == .NoneSkipLast {
+			return (r: second, g: third, b: fourth)
+		} else {
+			fatalError("not defined image format")
+		}
+	}
+
+	var normalisedHistogramVectors: [HistogramVector] {
+		let histogram = colorHistogram
+		let image = self
 
 		var result = [HistogramVector]()
-		for index in 0 ..< red.count {
-			result.append(HistogramVector(red: red[index], blue: blue[index], green: green[index]))
+		var max = 0.0
+
+		for index in 0 ..< histogram.r.count {
+			max += Double(histogram.r[index] + histogram.g[index] + histogram.b[index])
 		}
-		
-		return result
-	}
-	
-	func compareToImage(image: UIImage, withPrecision precision: Double = 20) -> Double? {
-		guard let resized1 = resizeImageToWidth(precision), resized2 = image.resizeImageToWidth(precision) else { return nil }
-		
-		let histogram1 = resized1.colorHistogram
-		let histogram2 = resized2.colorHistogram
 
-		let result = HistogramVector.compareArray(histogram1, toArray: histogram2)
+		for index in 0 ..< histogram.r.count {
+			let normalizedRed = Double(histogram.r[index]) / max
+			let normalizedGreen = Double(histogram.g[index]) / max
+			let normalizedBlue = Double(histogram.b[index]) / max
+			result.append(HistogramVector(red: normalizedRed, blue: normalizedBlue, green: normalizedGreen))
+		}
 
 		return result
 	}
 
+	var normalized1DArray: [Double] {
+		let pixelData = CGDataProviderCopyData(CGImageGetDataProvider(CGImage))
+		let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
+		var histogram = Array<Double>(count: binCount * binCount * binCount, repeatedValue: 0)
+		var total: Double = 0
 
-	func resizeImageToWidth(width: Double) -> UIImage? {
-		guard let data = UIImageJPEGRepresentation(self, 1.0) else { return nil }
-		let imageSource = CGImageSourceCreateWithData(data, nil)!
-		let options: [NSString: NSObject] = [
-			kCGImageSourceThumbnailMaxPixelSize: width,
-			kCGImageSourceCreateThumbnailFromImageAlways: true
-		]
-		
-		let scaledImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options).flatMap { UIImage(CGImage: $0) }
-		return scaledImage!
+		let bitMapInfo = CGImageGetBitmapInfo(CGImage)
+
+		for var i = 0; i < CGImageGetWidth(CGImage) * CGImageGetHeight(CGImage) * 4; i += 4 {
+			var r: UInt8 = 0
+			var g: UInt8 = 0
+			var b: UInt8 = 0
+
+			if CGImageGetAlphaInfo(CGImage) == .NoneSkipFirst {
+				if bitMapInfo.rawValue & CGBitmapInfo.ByteOrder32Little.rawValue > 0 {
+					r = data[i+2]
+					g = data[i+1]
+					b = data[i]
+				} else if bitMapInfo.rawValue & (CGBitmapInfo.ByteOrder32Big.rawValue | CGBitmapInfo.AlphaInfoMask.rawValue) > 0  {
+					r = data[i+1]
+					g = data[i+2]
+					b = data[i+3]
+				} else {
+					assertionFailure("not defined alpha handling")
+				}
+			} else if CGImageGetAlphaInfo(CGImage) == .NoneSkipLast {
+				r = data[i]
+				g = data[i+1]
+				b = data[i+2]
+			} else {
+				assertionFailure("not defined alpha handling")
+			}
+
+			let index = getSingleBinIndex(r, g: g, b: b)
+			histogram[index] += 1
+			total++
+		}
+
+		return histogram.map { $0 / total }
+	}
+
+	private func getSingleBinIndex(r: UInt8, g: UInt8, b: UInt8) -> Int {
+		let i1 = getBinIndex(r)
+		let i2 = getBinIndex(g)
+		let i3 = getBinIndex(b)
+		return i1 + i2 * binCount + i3 * binCount * binCount
+	}
+
+	private func getBinIndex(value: UInt8) -> Int {
+		var index = Int(value) * binCount / maxValue
+		if index >= binCount {
+			index = binCount - 1
+		}
+		return index
 	}
 }
