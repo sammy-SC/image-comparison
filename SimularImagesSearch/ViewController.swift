@@ -121,7 +121,7 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
 		let operation = BCOperation(asset: asset, histogram: histogram)
 		
 		operation.completionBlock = {
-			dispatch_async(dispatch_get_main_queue()) {
+			NSOperationQueue.mainQueue().addOperationWithBlock {
 				if operation.cancelled { return }
 				self.title = "To go: \(self.operationQueue.operationCount)"
 				if self.operationQueue.operationCount == 0 {
@@ -157,7 +157,7 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
 		let operation = EuclideanOperation(asset: asset, histogram: histogram)
 		
 		operation.completionBlock = {
-			dispatch_async(dispatch_get_main_queue()) {
+			NSOperationQueue.mainQueue().addOperationWithBlock {
 				if operation.cancelled { return }
 				self.title = "To go: \(self.operationQueue.operationCount)"
 				if self.operationQueue.operationCount == 0 {
@@ -262,8 +262,6 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource {
 		self.headerView = headerView
 		return headerView
 	}
-
-
 
 	func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
 		let width = (CGRectGetWidth(collectionView.bounds) - Constants.size.galleryMargin * 3) / 3
