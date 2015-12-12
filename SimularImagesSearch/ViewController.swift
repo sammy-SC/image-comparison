@@ -41,6 +41,8 @@ final class ViewController: UIViewController {
         return imagePicker
     }()
 
+	//MARK: -
+
 	private func loadImagesFromLibrary() {
 		let options = PHFetchOptions()
 		//		options.fetchLimit = 1
@@ -54,6 +56,28 @@ final class ViewController: UIViewController {
 			}
 		}
 	}
+
+	private func presentImagePicker() {
+		let controller = UIAlertController(title: nil, message: nil, preferredStyle: .ActionSheet)
+
+		let cancelAction = UIAlertAction(title: "Cancel", style: .Cancel) { _ in }
+		controller.addAction(cancelAction)
+
+		let libraryAction = UIAlertAction(title: "Photo Library", style: .Default) { _ in
+			self.imagePicker.sourceType = .PhotoLibrary
+			self.presentViewController(self.imagePicker, animated: true, completion: nil)
+		}
+		controller.addAction(libraryAction)
+
+		let cameraAction = UIAlertAction(title: "Camera", style: .Default) { _ in
+			self.imagePicker.sourceType = .Camera
+			self.presentViewController(self.imagePicker, animated: true, completion: nil)
+		}
+		controller.addAction(cameraAction)
+		presentViewController(controller, animated: true, completion: nil)
+	}
+
+	//MARK: -
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -86,72 +110,16 @@ final class ViewController: UIViewController {
 		self.baseView = baseView
 	}
 
-	private func presentImagePicker() {
-		let controller = UIAlertController(title: nil, message: nil, preferredStyle: .ActionSheet)
-		
-		let cancelAction = UIAlertAction(title: "Cancel", style: .Cancel) { _ in }
-		controller.addAction(cancelAction)
 
-		let libraryAction = UIAlertAction(title: "Photo Library", style: .Default) { _ in
-			self.imagePicker.sourceType = .PhotoLibrary
-			self.presentViewController(self.imagePicker, animated: true, completion: nil)
-		}
-		controller.addAction(libraryAction)
-
-		let cameraAction = UIAlertAction(title: "Camera", style: .Default) { _ in
-			self.imagePicker.sourceType = .Camera
-			self.presentViewController(self.imagePicker, animated: true, completion: nil)
-		}
-		controller.addAction(cameraAction)
-		presentViewController(controller, animated: true, completion: nil)
-	}
+	//MARK: - Actions
 
 	func didTapCancel() {
 		self.title = "Cancelled"
 		cancelButton.enabled = false
 		operationQueue.cancelAllOperations()
 	}
-}
 
-// MARK: - UIImagePickerControllerDelegate Methods
-
-extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDelegateFlowLayout {
-
-	private func bcOperationForAsset(asset: PHAsset, compareTo histogram: [Double]) -> Operation {
-		let operation = BCOperation(asset: asset, histogram: histogram)
-		
-		operation.completionBlock = {
-			NSOperationQueue.mainQueue().addOperationWithBlock {
-				if operation.cancelled { return }
-				self.title = "To go: \(self.operationQueue.operationCount)"
-				if self.operationQueue.operationCount == 0 {
-					self.title = "Done"
-					self.cancelButton.enabled = false
-					self.headerView?.switcher.enabled = true
-				}
-
-				guard let result = operation.result else {
-					return
-				}
-
-				print(result)
-				var newIndex = self.images.isEmpty ? 0 : self.images.count
-				for index in 0 ..< self.images.count {
-					if result > self.images[index].similarity {
-						newIndex = index
-						break
-					}
-				}
-				
-				self.collectionView.performBatchUpdates({
-					self.images.insert((asset: operation.asset, similarity: result), atIndex: newIndex)
-					self.collectionView.insertItemsAtIndexPaths([NSIndexPath(forItem: newIndex, inSection: 0)])
-					}, completion: nil)
-			}
-		}
-
-		return operation
-	}
+	//MARK: -
 
 	private func euclideanOperationForAsset(asset: PHAsset, compareTo histogram: [HistogramVector]) -> Operation {
 		let operation = EuclideanOperation(asset: asset, histogram: histogram)
@@ -189,6 +157,48 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
 		return operation
 	}
 
+	private func bcOperationForAsset(asset: PHAsset, compareTo histogram: [Double]) -> Operation {
+		let operation = BCOperation(asset: asset, histogram: histogram)
+		
+		operation.completionBlock = {
+			NSOperationQueue.mainQueue().addOperationWithBlock {
+				if operation.cancelled { return }
+				self.title = "To go: \(self.operationQueue.operationCount)"
+				if self.operationQueue.operationCount == 0 {
+					self.title = "Done"
+					self.cancelButton.enabled = false
+					self.headerView?.switcher.enabled = true
+				}
+
+				guard let result = operation.result else {
+					return
+				}
+
+				print(result)
+				var newIndex = self.images.isEmpty ? 0 : self.images.count
+				for index in 0 ..< self.images.count {
+					if result > self.images[index].similarity {
+						newIndex = index
+						break
+					}
+				}
+				
+				self.collectionView.performBatchUpdates({
+					self.images.insert((asset: operation.asset, similarity: result), atIndex: newIndex)
+					self.collectionView.insertItemsAtIndexPaths([NSIndexPath(forItem: newIndex, inSection: 0)])
+					}, completion: nil)
+			}
+		}
+
+		return operation
+	}
+
+
+}
+
+// MARK: - UIImagePickerControllerDelegate Methods
+
+extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDelegateFlowLayout {
 	func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
 		headerView?.imageView.image = image
 
@@ -219,7 +229,6 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
 		dismissViewControllerAnimated(true, completion: nil)
 	}
 }
-
 
 // MARK: - UICollectionViewDelegate & data source methods
 

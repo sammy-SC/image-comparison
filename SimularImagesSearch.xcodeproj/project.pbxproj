@@ -21,7 +21,6 @@
 		A5AC36BE1C1750380037645C /* BaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5AC36BD1C1750380037645C /* BaseView.swift */; };
 		A5AC36C01C1765DE0037645C /* ImageSearchHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5AC36BF1C1765DE0037645C /* ImageSearchHeaderView.swift */; };
 		A5B72A3C1C196CBB008E0528 /* HistogramVector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5B72A3B1C196CBB008E0528 /* HistogramVector.swift */; };
-		A5B72A3E1C196DC5008E0528 /* FoundationExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5B72A3D1C196DC5008E0528 /* FoundationExtensions.swift */; };
 		A5C7A3221C1A14A300931EF6 /* BCOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C7A3211C1A14A300931EF6 /* BCOperation.swift */; };
 /* End PBXBuildFile section */
 
@@ -44,7 +43,6 @@
 		A5AC36BD1C1750380037645C /* BaseView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseView.swift; sourceTree = "<group>"; };
 		A5AC36BF1C1765DE0037645C /* ImageSearchHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageSearchHeaderView.swift; sourceTree = "<group>"; };
 		A5B72A3B1C196CBB008E0528 /* HistogramVector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HistogramVector.swift; sourceTree = "<group>"; };
-		A5B72A3D1C196DC5008E0528 /* FoundationExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FoundationExtensions.swift; sourceTree = "<group>"; };
 		A5C7A3211C1A14A300931EF6 /* BCOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BCOperation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -132,7 +130,6 @@
 			children = (
 				A538643F1C17338800BB6F24 /* UIImageExtensions.swift */,
 				A5AC36B41C174C0D0037645C /* UIKitExtensions.swift */,
-				A5B72A3D1C196DC5008E0528 /* FoundationExtensions.swift */,
 			);
 			name = Extensions;
 			sourceTree = "<group>";
@@ -302,7 +299,6 @@
 				A5AC36BE1C1750380037645C /* BaseView.swift in Sources */,
 				A5AC36C01C1765DE0037645C /* ImageSearchHeaderView.swift in Sources */,
 				A538642E1C17336C00BB6F24 /* AppDelegate.swift in Sources */,
-				A5B72A3E1C196DC5008E0528 /* FoundationExtensions.swift in Sources */,
 				A5AC36B31C174B9C0037645C /* ImageCell.swift in Sources */,
 				A5AC36B51C174C0D0037645C /* UIKitExtensions.swift in Sources */,
 				A5C7A3221C1A14A300931EF6 /* BCOperation.swift in Sources */,

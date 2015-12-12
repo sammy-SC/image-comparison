@@ -57,7 +57,6 @@ extension UIImage {
 
 	var normalisedHistogramVectors: [HistogramVector] {
 		let histogram = colorHistogram
-		let image = self
 
 		var result = [HistogramVector]()
 		var max = 0.0

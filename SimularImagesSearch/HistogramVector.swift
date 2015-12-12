@@ -14,7 +14,7 @@ struct HistogramVector {
 	let green: Double
 
 	func compare(histogram: HistogramVector) -> Double {
-    //distance
+        //distance
 		let first = pow(red - histogram.red, 2.0)
 		let second = pow(blue - histogram.blue, 2.0)
 		let third = pow(green - histogram.green, 2.0)

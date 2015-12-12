@@ -37,5 +37,4 @@ class Operation: NSOperation {
 		didChangeValueForKey("isExecuting")
 		didChangeValueForKey("isFinished")
 	}
-
 }

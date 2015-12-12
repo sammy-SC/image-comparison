@@ -65,5 +65,4 @@ final class EuclideanOperation: Operation {
 				self.finish()
 		}
 	}
-
 }

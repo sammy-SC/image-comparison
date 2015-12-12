@@ -9,6 +9,7 @@
 import UIKit
 import Photos
 
+
 final class BCOperation: Operation {
 	private let manager = PHImageManager()
 	private let requestOptions: PHImageRequestOptions = {
@@ -74,5 +75,4 @@ final class BCOperation: Operation {
 				print("finished")
 		}
 	}
-
 }
