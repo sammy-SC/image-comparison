@@ -116,6 +116,7 @@ final class ViewController: UIViewController {
 	func didTapCancel() {
 		self.title = "Cancelled"
 		cancelButton.enabled = false
+		headerView?.switcher.enabled = true
 		operationQueue.cancelAllOperations()
 	}
 
